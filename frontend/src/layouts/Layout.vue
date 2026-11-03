@@ -13,12 +13,19 @@
           style="flex: 1; display: flex; align-items: center; font-size: 24px; font-weight: bold"
         >
           <img style="width: 40px" src="@/assets/imgs/logo.png" alt="" />
-          <div style="margin-left: 5px">智能实验室预约系统</div>
+          <div style="margin-left: 5px">智能知约校园</div>
         </div>
-        <div style="display: flex; align-items: center">
-          <img src="@/assets/imgs/logo.png" alt="" style="width: 30px; border-radius: 50%" />
-          <div style="margin-left: 3px">管理员</div>
-        </div>
+        <el-dropdown>
+          <div style="display: flex; align-items: center; cursor: pointer">
+            <img src="@/assets/imgs/logo.png" alt="" style="width: 30px; border-radius: 50%" />
+            <div style="margin-left: 3px">管理员</div>
+          </div>
+          <template #dropdown>
+            <el-dropdown-menu>
+              <el-dropdown-item @click="logout">退出登录</el-dropdown-item>
+            </el-dropdown-menu>
+          </template>
+        </el-dropdown>
       </el-header>
       <el-container>
         <el-aside width="220px">
@@ -51,4 +58,9 @@
 
 <script setup>
 import { Menu as IconMenu, House, Setting, User } from '@element-plus/icons-vue'
+import router from '@/router'
+
+const logout = () => {
+  router.push('/login')
+}
 </script>
