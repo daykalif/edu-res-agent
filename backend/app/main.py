@@ -10,6 +10,8 @@ from app.common.exceptions import (
     global_excpetion_hadler,
 )
 from starlette.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from app.config import UPLOAD_DIR
 
 # 根据模型创建数据库表。
 Base.metadata.create_all(bind=engine)
@@ -38,6 +40,9 @@ app.add_exception_handler(HTTPException, http_excpetion_hadler)
 app.add_exception_handler(RequestValidationError, validation_excpetion_hadler)
 # 全局的异常兜底，必须放在最后注册！！
 app.add_exception_handler(Exception, global_excpetion_hadler)
+
+# 挂载静态资源：/uploads/xxx.jpg → uploads/xxx.jpg
+app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
 
 
 @app.get("/")
