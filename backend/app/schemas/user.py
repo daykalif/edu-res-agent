@@ -29,3 +29,14 @@ class UserUpdateRequest(BaseModel):
 class PasswordUpdateRequest(BaseModel):
     old_password: str
     new_password: str
+
+
+class UserCreateRequest(BaseModel):
+    username: str
+    password: str = "123"
+    name: str | None = None
+    email: str | None = None
+    phone: str | None = None
+    avatar: str | None = None
+    role: str = "student"
+    status: int = 1
