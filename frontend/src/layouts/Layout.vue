@@ -15,17 +15,26 @@
           <img style="width: 40px" src="@/assets/imgs/logo.png" alt="" />
           <div style="margin-left: 5px">智能知约校园</div>
         </div>
-        <el-dropdown>
-          <div style="display: flex; align-items: center; cursor: pointer">
-            <img src="@/assets/imgs/logo.png" alt="" style="width: 30px; border-radius: 50%" />
-            <div style="margin-left: 3px">管理员</div>
-          </div>
-          <template #dropdown>
-            <el-dropdown-menu>
-              <el-dropdown-item @click="logout">退出登录</el-dropdown-item>
-            </el-dropdown-menu>
-          </template>
-        </el-dropdown>
+        <div>
+          <el-dropdown @command="handleCommand">
+            <div style="display: flex; align-items: center; cursor: pointer">
+              <img
+                :src="userInfo?.avatar || defaultAvatar"
+                @error="(event) => (event.target.src = defaultAvatar)"
+                alt=""
+                style="width: 30px; height: 30px; border-radius: 50%"
+              />
+              <div style="margin-left: 3px">{{ userInfo?.name }}</div>
+            </div>
+            <template #dropdown>
+              <el-dropdown-menu>
+                <el-dropdown-item command="profile">个人信息</el-dropdown-item>
+                <el-dropdown-item command="password">修改密码</el-dropdown-item>
+                <el-dropdown-item divided command="logout">退出登录</el-dropdown-item>
+              </el-dropdown-menu>
+            </template>
+          </el-dropdown>
+        </div>
       </el-header>
       <el-container>
         <el-aside width="220px">
@@ -59,8 +68,20 @@
 <script setup>
 import { Menu as IconMenu, House, Setting, User } from '@element-plus/icons-vue'
 import router from '@/router'
+import { useUser } from '@/utils/user'
+import { logout } from '@/utils/auth'
+import defaultAvatar from '@/assets/imgs/logo.png'
 
-const logout = () => {
-  router.push('/login')
+const { userInfo } = useUser()
+
+const handleCommand = (command) => {
+  if (command === 'profile') {
+    router.push('/manager/profile')
+  } else if (command === 'password') {
+    router.push('/manager/password')
+  } else if (command === 'logout') {
+    logout()
+    router.push('/login')
+  }
 }
 </script>

@@ -1,5 +1,4 @@
 import { fileURLToPath, URL } from 'node:url'
-
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import vueDevTools from 'vite-plugin-vue-devtools'
@@ -14,11 +13,16 @@ export default defineConfig({
   },
   server: {
     port: 5173,
-    // 开发代理，前端跨域配置
     proxy: {
+      // API 接口代理
       '/api': {
         target: 'http://127.0.0.1:8000', // 后端地址
         changeOrigin: true // 修改源，核心
+      },
+      // 静态文件代理（头像图片）
+      '/uploads': {
+        target: 'http://127.0.0.1:8000',
+        changeOrigin: true
       }
     }
   }
