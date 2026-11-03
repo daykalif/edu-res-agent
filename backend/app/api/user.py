@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from app.common.response import Response
 from app.models.user import User
-from app.dependencies.auth import get_current_user
+from app.dependencies.auth import get_current_user, get_current_admin
 from app.schemas.user import PasswordUpdateRequest, UserResponse, UserUpdateRequest
 from app.services import user_service
 from app.database import get_db
@@ -37,3 +37,15 @@ def update_password(
     """修改当前用户密码"""
     user_service.update_password(db, current_user, data)
     return Response.success(message="密码修改成功")
+
+
+@router.get("/list")
+def get_user_list(
+    page: int = 1,
+    page_size: int = 10,
+    keywords: str | None = None,
+    current_user: User = Depends(get_current_admin),  # 只有管理员才能访问
+    db: Session = Depends(get_db),
+):
+    res = user_service.get_user_page_list(db, page, page_size, keywords)
+    return Response.success(data=res)

@@ -5,6 +5,9 @@ from sqlalchemy.orm import Session
 
 from app.utils.password import hash_password, verify_password
 
+from operator import or_
+from app.common.response import PageResponse
+
 """
 1. `User`：一般是 **SQLAlchemy 的数据库模型**，里面可能包含敏感字段：`password`、`secret`、内部字段等
 2. `UserResponse`：你自己定义的 Pydantic 输出模型，**只保留前端需要展示的字段**（比如 id、昵称、邮箱、头像，不返回密码）
@@ -36,3 +39,24 @@ def update_password(db: Session, user: User, data: PasswordUpdateRequest):
         raise BusinessException(message="新密码不能与原密码相同")
     user.password = hash_password(data.new_password)
     db.commit()
+
+
+def get_user_page_list(
+    db: Session, page: int, page_size: int, keywords: str | None = None
+):
+    # select * from user where username like '%张%' or name like '%张%';
+    query = db.query(User)
+    if keywords:
+        query = query.filter(
+            or_(User.username.ilike(f"%{keywords}%"), User.name.ilike(f"%{keywords}%"))
+        )
+    total = query.count()
+    items = (
+        query.order_by(User.id.desc())
+        .offset((page - 1) * page_size)
+        .limit(page_size)
+        .all()
+    )
+    return PageResponse(
+        list=[UserResponse.model_validate(item) for item in items], total=total
+    )
