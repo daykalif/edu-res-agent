@@ -1,5 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.exceptions import RequestValidationError
+from app.models.user import User
+from app.models.lab import Lab
 from app.database import Base, engine
 from app.api import api
 from app.common.exceptions import (
@@ -13,7 +15,7 @@ from starlette.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from app.config import UPLOAD_DIR
 
-# 根据模型创建数据库表。
+# 根据模型创建数据库表。需要把models导入到main.py中，否则不会创建表
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
