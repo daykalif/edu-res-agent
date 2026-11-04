@@ -98,8 +98,12 @@ def update_user(db: Session, user_id: int, data: UserUpdateRequest):
     if not user:
         raise BusinessException(message="用户不存在")
     payload = data.model_dump(exclude_none=True)
-    for filed, value in payload.items():
-        setattr(user, filed, value)
+    # 密码需加密存储；为空字符串时视为不修改密码
+    password = payload.pop("password", None)
+    if password:
+        user.password = hash_password(password)
+    for field, value in payload.items():
+        setattr(user, field, value)
     db.commit()
     db.refresh(user)
     return UserResponse.model_validate(user)
