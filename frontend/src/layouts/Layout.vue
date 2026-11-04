@@ -60,6 +60,14 @@
               <el-icon><Setting /></el-icon>
               <span>设备列表管理</span>
             </el-menu-item>
+            <el-menu-item index="/manager/my-reservation" v-if="userInfo?.role === 'student'">
+              <el-icon><Tickets /></el-icon>
+              <span>我的预约</span>
+            </el-menu-item>
+            <el-menu-item index="/manager/audit-reservation" v-if="userInfo?.role === 'admin'">
+              <el-icon><DocumentChecked /></el-icon>
+              <span>预约审核</span>
+            </el-menu-item>
             <el-menu-item index="/manager/user" v-if="userInfo?.role === 'admin'">
               <el-icon><User /></el-icon>
               <span>用户管理</span>
@@ -75,7 +83,15 @@
 </template>
 
 <script setup>
-import { Menu as IconMenu, House, Setting, User, OfficeBuilding } from '@element-plus/icons-vue'
+import {
+  Menu as IconMenu,
+  House,
+  Setting,
+  User,
+  OfficeBuilding,
+  Tickets,
+  DocumentChecked
+} from '@element-plus/icons-vue'
 import router from '@/router'
 import { useUser } from '@/utils/user'
 import { logout } from '@/utils/auth'
