@@ -9,6 +9,9 @@ bcrypt==5.0.0
 PyJWT==2.13.0
 
 # 文件上传
-python-multipart=0.0.33
+python-multipart==0.0.33
 
 cryptography==50.0.1
+
+# openai 这个包兼容 OpenAI 接口。本项目用 Agnes 的 agnes-3.0-flash，换模型只改 .env。国内用户走 .cn 节点。
+openai==3.14.1
