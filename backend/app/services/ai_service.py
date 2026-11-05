@@ -2,17 +2,13 @@ from openai import OpenAI
 from app.common.exceptions import BusinessException
 from app.config import settings
 from app.schemas.ai import ChatMessage, ChatRequest
+from app.services import kb_service
 
 SYSTEM_PROMPT = """你是智能实验室预约系统的助手，回答要简洁。
-你可以介绍本系统的预约流程：
-1. 登录后打开实验室列表，选择实验室或设备
-2. 填写日期和时段并提交，状态为待审核
-3. 管理员审核通过后即可使用
-4. 待审核、已通过的预约，本人可以取消
-
-你目前查不到真实的实验室、设备、预约数据。
-如果用户问某个实验室几点开门、有没有某台设备，请说明去「实验室列表」查看，不要编造具体数据。
-如果用户问了跟实验室无关的问题，可以直接拒绝回答。
+如果下面提供了实验室资料，请依据资料回答，不要编造资料里没有的时间、规则、设备。
+你目前查不到真实的实验室空闲、设备库存、预约记录。
+如果用户问现在哪些实验室能约、某台设备此刻有没有空，请说明去「实验室列表」查看。
+除了实验室相关的问题之外，不要回复无关的问题。
 """
 
 
@@ -31,9 +27,22 @@ def chat(data: ChatRequest):
     history = []
     for message in data.messages:
         if message.role in ("user", "assistant") and message.content.strip():
-            history.append(message)
+            history.append(message.model_dump())
     if not history:
         raise BusinessException(message="请输入您要对话的内容")
+
+    # 从历史消息倒序查找，拿到最近一条用户提问；找不到就返回空字符串
+    question = next(
+        (item["content"] for item in reversed(history) if item["role"] == "user"), ""
+    )
+    # 从向量库检索
+    knowledge = kb_service.search(query=question)
+
+    print(f"检索到的最相关2条向量库的内容---ai_service--->：\n{knowledge}")
+
+    system_prompt = SYSTEM_PROMPT
+    if knowledge:
+        system_prompt += "\n\n ----- 以下是检索到的实验室的资料：-----\n" + knowledge
 
     client = get_client()
 
@@ -43,7 +52,7 @@ def chat(data: ChatRequest):
             model=settings.LLM_MODEL,
             messages=[
                 # 系统提示词
-                ChatMessage(role="assistant", content=SYSTEM_PROMPT),
+                {"role": "system", "content": system_prompt},
                 # 对话上下文
                 *history,
             ],

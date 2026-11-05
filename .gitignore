@@ -38,3 +38,9 @@ __screenshots__/
 
 # Vite
 *.timestamp-*-*.mjs
+
+backend/.venv
+**/.venv/
+
+/chroma/
+**/chroma/

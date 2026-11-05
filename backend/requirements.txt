@@ -15,3 +15,6 @@ cryptography==50.0.1
 
 # openai 这个包兼容 OpenAI 接口。本项目用 Agnes 的 agnes-3.0-flash，换模型只改 .env。国内用户走 .cn 节点。
 openai==3.14.1
+
+# 向量库。ChromaDB 用于把文档做成向量，存到本地目录。
+chromadb==1.5.9
