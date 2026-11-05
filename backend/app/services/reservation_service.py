@@ -8,6 +8,8 @@ from app.models.reservation import Reservation
 from app.models.user import User
 from app.common.response import PageResponse
 from app.schemas.reservation import ReservationCreateRequest, ReservationResponse
+import asyncio
+from app.database import SessionLocal
 
 
 def create_reservation(db: Session, current_user: User, data: ReservationCreateRequest):
@@ -130,3 +132,29 @@ def audit_reservation(db: Session, reservation_id: int, status: int):
         raise BusinessException(message="当前状态不支持审核")
     item.status = status
     db.commit()
+
+
+def expire_pending_reservations():
+    db = SessionLocal()
+    try:
+        now = datetime.now()
+        today = now.strftime("%Y-%m-%d")
+        now_time = now.strftime("%H:%M")
+        # 查询所有待审核的预约记录
+        items = db.query(Reservation).filter(Reservation.status == 0).all()
+        changed = False
+        for item in items:
+            if item.date < today or (item.date == today and item.end_time <= now_time):
+                item.status = 3  # 设置预约失败
+                changed = True
+        if changed:
+            db.commit()
+    finally:
+        db.close()
+
+
+async def run_expire_scan():
+    """一分钟扫描一次，过期的待审核预约设置为已取消"""
+    while True:
+        expire_pending_reservations()
+        await asyncio.sleep(60)  # 60秒
