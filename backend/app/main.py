@@ -35,8 +35,13 @@ async def lifespan(app: FastAPI):
         logger.exception("向量库预热失败，服务继续启动")
     # 启动项目开启异步的扫描任务
     task = asyncio.create_task(reservation_service.run_expire_scan())
-    yield
-    task.cancel()  # 关闭项目同时取消异步任务
+    try:
+        yield
+    finally:
+        task.cancel()  # 关闭项目同时取消异步任务
+        await asyncio.gather(
+            task, return_exceptions=True
+        )  # 取消任务不再把 CanceledError 抛给 lifespan
 
 
 app = FastAPI(lifespan=lifespan)

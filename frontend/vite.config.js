@@ -17,7 +17,16 @@ export default defineConfig({
       // API 接口代理
       '/api': {
         target: 'http://127.0.0.1:8000', // 后端地址
-        changeOrigin: true // 修改源，核心
+        changeOrigin: true, // 修改源，核心
+        configure: (proxy) => {
+          proxy.on('proxyRes', (proxyRes) => {
+            // 对流式响应关掉缓冲，过程事件才能实时到浏览器
+            if (proxyRes.headers['content-type']?.includes('text/event-stream')) {
+              proxyRes.headers['cache-control'] = 'no-cache'
+              proxyRes.headers['x-accel-buffering'] = 'no'
+            }
+          })
+        }
       },
       // 静态文件代理（头像图片）
       '/uploads': {

@@ -155,6 +155,9 @@ def expire_pending_reservations():
 
 async def run_expire_scan():
     """一分钟扫描一次，过期的待审核预约设置为已取消"""
-    while True:
-        expire_pending_reservations()
-        await asyncio.sleep(60)  # 60秒
+    try:
+        while True:
+            await asyncio.to_thread(expire_pending_reservations)
+            await asyncio.sleep(60)  # 60秒
+    except asyncio.CancelledError:
+        return
