@@ -9,13 +9,37 @@ from app.config import BASE_DIR
 KB_DIR = BASE_DIR / "data" / "kb"
 # 向量库的存储地址
 CHROMA_DIR = BASE_DIR / "data" / "chroma"
+# 向量模型名称
+EMBEDDING_MODEL_NAME = "BAAI/bge-small-zh-v1.5"
+
 # 集合，用于存储从文档中加载出来的向量，只加载一次。
 _collection = None
 
 # 给 chromadb 使用，把文本转为向量，用来相似度检索。智源 BGE 系列，中文轻量嵌入模型，RAG 中文场景很常用
-_embedding_fn = embedding_functions.SentenceTransformerEmbeddingFunction(
-    model_name="BAAI/bge-small-zh-v1.5"
-)
+_embedding_fn = None
+
+
+def get_embedding_fn():
+    """懒加载 embedding 模型：只加载一次，之后复用同一个实例"""
+    global _embedding_fn
+
+    if _embedding_fn is not None:
+        return _embedding_fn
+
+    # SentenceTransformerEmbeddingFunction 自带类级缓存，同名模型也不会重复加载
+    _embedding_fn = embedding_functions.SentenceTransformerEmbeddingFunction(
+        model_name=EMBEDDING_MODEL_NAME
+    )
+
+    return _embedding_fn
+
+
+# 主动触发一次，不论是查什么内容，只要有查询，向量库就会加载出来。也就是人为的触发一次 embedding，避免第一个用户请求时才加载，导致响应慢
+def warmup():
+    """启动时预热：把模型加载 + 首次检索的开销付在启动阶段，别落在第一个用户请求上"""
+    col = get_collcetion()
+    if col.count() > 0:
+        col.query(query_texts=["预热"], n_results=1)
 
 
 def get_collcetion() -> Collection:
@@ -34,8 +58,9 @@ def get_collcetion() -> Collection:
 
     # 将本地文件夹中的md文件加载到向量库
     col = client.get_or_create_collection(
-        name="lab_kb", embedding_function=_embedding_fn
+        name="lab_kb", embedding_function=get_embedding_fn()
     )
+
     # 加载的过程：1. 遍历KB_DIR文件夹下的所有md文件；2. 读取文件内容；3. 添加到向量库。
     if col.count() == 0:
         ids = []

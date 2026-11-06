@@ -18,3 +18,9 @@ openai==3.14.1
 
 # 向量库。ChromaDB 用于把文档做成向量，存到本地目录。
 chromadb==1.5.9
+
+# langgraph用于图编排，工具调用
+langgraph==1.2.11
+langchain-openai==1.6.2
+# langchain用于调度大模型，大模型输出结果封装
+langchain-core==1.6.3

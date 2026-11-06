@@ -1,3 +1,7 @@
+"""
+手工编写大模型对话 + Tool Calling
+"""
+
 import traceback
 from openai import OpenAI
 from app.common.exceptions import BusinessException

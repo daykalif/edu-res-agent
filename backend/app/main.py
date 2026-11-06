@@ -1,6 +1,7 @@
 import asyncio
 from contextlib import asynccontextmanager
 
+from chromadb import logger
 from fastapi import FastAPI, HTTPException
 from fastapi.exceptions import RequestValidationError
 from app.models.user import User
@@ -19,7 +20,7 @@ from app.common.exceptions import (
 from starlette.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from app.config import UPLOAD_DIR
-from app.services import reservation_service
+from app.services import kb_service, reservation_service
 
 # 根据模型创建数据库表。需要把models导入到main.py中，否则不会创建表
 Base.metadata.create_all(bind=engine)
@@ -27,6 +28,11 @@ Base.metadata.create_all(bind=engine)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    # 预热向量库：模型加载（约 15s）挪到启动阶段，避免拖慢首个请求、触发前端超时
+    try:
+        await asyncio.to_thread(kb_service.warmup)  # to_thread：别阻塞事件循环
+    except Exception:
+        logger.exception("向量库预热失败，服务继续启动")
     # 启动项目开启异步的扫描任务
     task = asyncio.create_task(reservation_service.run_expire_scan())
     yield
